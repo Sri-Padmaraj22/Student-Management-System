@@ -15,6 +15,8 @@
       <div>
         <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addStudentModal">Add Student</button>
         <button class="btn btn-primary" onclick="fetchStudents()">Refresh</button>
+        <button class="btn btn-danger" onclick="logout()">Logout</button>
+
       </div>
     </div>
 
@@ -150,12 +152,25 @@
   let currentPage=1;
   let currentSearch='';
 
+  function checkAuth()
+  {
+    const token=localStorage.getItem('token');
+    if(!token){
+      window.location.href='login.html';
+    }
+    return token;
+  }
+
+  const token=checkAuth();
   //View all students
   async function fetchStudents(search='',page=1)
   {
     currentPage=page;
     currentSearch=search;
-    const res=await fetch(`${apiUrl}?search=${encodeURIComponent(search)}&page=${page}&limit=3`);
+    const res=await fetch(`${apiUrl}?search=${encodeURIComponent(search)}&page=${page}&limit=3`,
+    {
+      headers:{'Authorization':`Bearer ${token}`}
+    });
     const data=await res.json();
     //console.log(data);
     const tbody=document.querySelector('#studentTableBody');
@@ -224,7 +239,9 @@
 
   async function viewStudent(id)
   {
-    const res=await fetch(`${apiUrl}/${id}`);
+    const res=await fetch(`${apiUrl}/${id}`,{
+      headers:{'Authorization':`Bearer ${token}`}
+    });
     const student=await res.json();
     //console.log(data);
 
@@ -250,6 +267,8 @@
     const res= await fetch(apiUrl,{
       method:'POST',
       body:formData
+    ,
+      headers:{'Authorization':`Bearer ${token}`}
     });
 
     if(res.ok)
@@ -271,6 +290,8 @@
     {
     await fetch(`${apiUrl}/${id}`,{
       method:'DELETE'
+    ,
+      headers:{'Authorization':`Bearer ${token}`}
     })
     fetchStudents();
     }
@@ -280,7 +301,9 @@
 
   async function editStudent(id)
   {
-    const res=await fetch(`${apiUrl}/${id}`);
+    const res=await fetch(`${apiUrl}/${id}`,{
+      headers:{'Authorization':`Bearer ${token}`}
+    });
     const student=await res.json();
     document.querySelector('#editStudentId').value=student._id;
     document.querySelector('#editFirstName').value=student.first_name;
@@ -302,7 +325,8 @@
 
     const res= await fetch(`${apiUrl}/${id}`,{
       method:'PUT',
-      body:formData
+      body:formData,
+      headers:{'Authorization':`Bearer ${token}`}
     });
 
     if(res.ok)
@@ -313,6 +337,13 @@
     else
     alert('Error updating student');
   })
+
+  //Logout Function
+
+  function logout(){
+    localStorage.removeItem('token');
+    window.location.href='login.html';
+  }
 </script>
 </body>
 </html>
